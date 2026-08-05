@@ -1,16 +1,29 @@
-import os
 from flask import Flask
+from flask_login import LoginManager
 from extensions import db
 from config import Config
 from models import User, Trek, Booking
+from routes import register_routes
 
-app = Flask(__name__, instance_relative_config=True)
+app = Flask(__name__)
 app.config.from_object(Config)
-os.makedirs(app.instance_path, exist_ok=True)
 db.init_app(app)
+
+# Set up Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Register routes directly onto app
+register_routes(app)
+
+# Create tables
 with app.app_context():
     db.create_all()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()          
     app.run(debug=True)
