@@ -32,7 +32,6 @@ def register_routes(app):
             user = User.query.filter_by(email=email).first()
             
             if user and check_password_hash(user.password, password):
-                # Check if staff is approved
                 if user.role == 'staff' and user.status != 'approved':
                     flash('Your account is pending admin approval.', 'warning')
                     return redirect(url_for('login'))
@@ -62,12 +61,10 @@ def register_routes(app):
             password = request.form.get('password')
             role = request.form.get('role')
             
-            # Check if email already exists
             if User.query.filter_by(email=email).first():
                 flash('Email already exists', 'error')
                 return redirect(url_for('register'))
             
-            # Create new user
             new_user = User(
                 name=name,
                 email=email,
@@ -280,7 +277,58 @@ def register_routes(app):
         if current_user.role != 'staff' or current_user.status != 'approved':
             flash('Access denied or not approved yet', 'error')
             return redirect(url_for('home'))
-        return render_template('staff/dashboard.html')
+        
+        assigned_treks = Trek.query.filter_by(assigned_staff_id=current_user.id).all()
+        
+        total_assigned_treks = len(assigned_treks)
+        open_treks = len([t for t in assigned_treks if t.status == 'Open'])
+        
+        total_participants = 0
+        for trek in assigned_treks:
+            total_participants += Booking.query.filter_by(trek_id=trek.id, booking_status='Booked').count()
+        
+        return render_template('staff/dashboard.html',
+                               assigned_treks=assigned_treks,
+                               total_assigned_treks=total_assigned_treks,
+                               open_treks=open_treks,
+                               total_participants=total_participants)
+
+    # ============ STAFF - MANAGE TREK ============
+    @app.route('/staff/manage-trek/<int:trek_id>', methods=['GET', 'POST'])
+    @login_required
+    def manage_trek(trek_id):
+        if current_user.role != 'staff' or current_user.status != 'approved':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        trek = Trek.query.get_or_404(trek_id)
+        
+        if trek.assigned_staff_id != current_user.id:
+            flash('You are not assigned to this trek', 'error')
+            return redirect(url_for('staff_dashboard'))
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'update_slots':
+                new_slots = request.form.get('available_slots')
+                try:
+                    trek.available_slots = int(new_slots)
+                    db.session.commit()
+                    flash('Slots updated successfully!', 'success')
+                except ValueError:
+                    flash('Invalid slot number', 'error')
+            
+            elif action == 'update_status':
+                new_status = request.form.get('status')
+                trek.status = new_status
+                db.session.commit()
+                flash(f'Trek status updated to {new_status}!', 'success')
+            
+            return redirect(url_for('manage_trek', trek_id=trek.id))
+        
+        bookings = Booking.query.filter_by(trek_id=trek.id).all()
+        return render_template('staff/manage_trek.html', trek=trek, bookings=bookings)
 
     # ============ USER DASHBOARD ============
     @app.route('/user/dashboard')

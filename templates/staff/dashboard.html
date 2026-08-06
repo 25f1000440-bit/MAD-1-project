@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Staff Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('staff_dashboard') }}" class="active">Dashboard</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <h1>My Dashboard</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- STATISTICS CARDS -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">📍</div>
+                <div class="stat-info">
+                    <h3>Assigned Treks</h3>
+                    <p class="stat-number">{{ total_assigned_treks }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>Total Participants</h3>
+                    <p class="stat-number">{{ total_participants }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3>Open Treks</h3>
+                    <p class="stat-number">{{ open_treks }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY ASSIGNED TREKS -->
+        <div class="recent-bookings-section">
+            <h2>My Assigned Treks</h2>
+            {% if assigned_treks %}
+                <table class="treks-table">
+                    <thead>
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Participants</th>
+                            <th>Available Slots</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trek in assigned_treks %}
+                        <tr>
+                            <td>{{ trek.trek_name }}</td>
+                            <td>{{ trek.location }}</td>
+                            <td>{{ trek.bookings|selectattr('booking_status', 'equalto', 'Booked')|list|length }}</td>
+                            <td>{{ trek.available_slots }}</td>
+                            <td>
+                                <span class="status-badge status-{{ trek.status.lower() }}">
+                                    {{ trek.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('manage_trek', trek_id=trek.id) }}" class="btn btn-sm btn-primary">Manage</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted">No treks assigned yet. Contact your admin.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
