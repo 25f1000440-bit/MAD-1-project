@@ -18,10 +18,10 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Register routes directly onto app
+# Register all routes onto the app instance
 register_routes(app)
 
-# Create tables
+# Create database tables
 with app.app_context():
     db.create_all()
 

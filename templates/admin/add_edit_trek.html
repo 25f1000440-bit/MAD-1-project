@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Admin Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_treks') }}" class="active">Manage Treks</a></li>
+            <li><a href="{{ url_for('manage_staff') }}">Manage Staff</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <h1>{% if trek %}Edit Trek{% else %}Add New Trek{% endif %}</h1>
+
+        <div class="form-container">
+            <form method="POST" class="trek-form">
+                <div class="form-group">
+                    <label>Trek Name:</label>
+                    <input type="text" name="trek_name" value="{{ trek.trek_name if trek else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Location:</label>
+                    <input type="text" name="location" value="{{ trek.location if trek else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Difficulty:</label>
+                        <select name="difficulty" required>
+                            <option value="">-- Select Difficulty --</option>
+                            <option value="Easy" {% if trek and trek.difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                            <option value="Moderate" {% if trek and trek.difficulty == 'Moderate' %}selected{% endif %}>Moderate</option>
+                            <option value="Hard" {% if trek and trek.difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Duration (Days):</label>
+                        <input type="number" name="duration" value="{{ trek.duration if trek else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Start Date:</label>
+                        <input type="date" name="start_date" value="{{ trek.start_date.strftime('%Y-%m-%d') if trek else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>End Date:</label>
+                        <input type="date" name="end_date" value="{{ trek.end_date.strftime('%Y-%m-%d') if trek else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Available Slots:</label>
+                        <input type="number" name="available_slots" value="{{ trek.available_slots if trek else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assign Staff:</label>
+                        <select name="assigned_staff_id">
+                            <option value="">-- No Assignment --</option>
+                            {% for staff in staff_members %}
+                                <option value="{{ staff.id }}" {% if trek and trek.assigned_staff_id == staff.id %}selected{% endif %}>
+                                    {{ staff.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{% if trek %}Update Trek{% else %}Create Trek{% endif %}</button>
+                    <a href="{{ url_for('manage_treks') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Admin Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_treks') }}" class="active">Manage Treks</a></li>
+            <li><a href="{{ url_for('manage_staff') }}">Manage Staff</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <div class="page-header">
+            <h1>Manage Treks</h1>
+            <a href="{{ url_for('add_trek') }}" class="btn btn-primary">+ Add New Trek</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if treks %}
+            <div class="treks-table-section">
+                <table class="treks-table">
+                    <thead>
+                        <tr>
+                            <th>Trek ID</th>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Difficulty</th>
+                            <th>Duration (Days)</th>
+                            <th>Available Slots</th>
+                            <th>Status</th>
+                            <th>Assigned Staff</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trek in treks %}
+                        <tr>
+                            <td>#{{ trek.id }}</td>
+                            <td>{{ trek.trek_name }}</td>
+                            <td>{{ trek.location }}</td>
+                            <td>
+                                <span class="difficulty-badge difficulty-{{ trek.difficulty.lower() }}">
+                                    {{ trek.difficulty }}
+                                </span>
+                            </td>
+                            <td>{{ trek.duration }}</td>
+                            <td>{{ trek.available_slots }}</td>
+                            <td>
+                                <span class="status-badge status-{{ trek.status.lower() }}">
+                                    {{ trek.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if trek.assigned_staff %}
+                                    {{ trek.assigned_staff.name }}
+                                {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('edit_trek', trek_id=trek.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                <form method="POST" action="{{ url_for('delete_trek', trek_id=trek.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No treks available. <a href="{{ url_for('add_trek') }}">Create the first trek</a></p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

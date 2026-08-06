@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Admin Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_treks') }}">Manage Treks</a></li>
+            <li><a href="{{ url_for('manage_staff') }}">Manage Staff</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <h1>Admin Dashboard</h1>
+        
+        <!-- STATISTICS CARDS -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">📍</div>
+                <div class="stat-info">
+                    <h3>Total Treks</h3>
+                    <p class="stat-number">{{ total_treks }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3>Total Users</h3>
+                    <p class="stat-number">{{ total_users }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👨‍💼</div>
+                <div class="stat-info">
+                    <h3>Total Staff</h3>
+                    <p class="stat-number">{{ total_staff }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <h3>Total Bookings</h3>
+                    <p class="stat-number">{{ total_bookings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT BOOKINGS TABLE -->
+        <div class="recent-bookings-section">
+            <h2>Recent Bookings</h2>
+            {% if recent_bookings %}
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>User Name</th>
+                            <th>Trek Name</th>
+                            <th>Booking Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in recent_bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+                            <td>{{ booking.user.name }}</td>
+                            <td>{{ booking.trek.trek_name }}</td>
+                            <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <span class="status-badge status-{{ booking.booking_status.lower() }}">
+                                    {{ booking.booking_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No bookings yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
