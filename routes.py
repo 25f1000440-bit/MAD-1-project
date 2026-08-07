@@ -270,6 +270,25 @@ def register_routes(app):
         
         return redirect(url_for('manage_staff'))
 
+    # ============ ADMIN - ALL BOOKINGS / TREKKING HISTORY ============
+    @app.route('/admin/all-bookings')
+    @login_required
+    def all_bookings():
+        if current_user.role != 'admin':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        # Optional status filter
+        status_filter = request.args.get('status', 'All')
+        
+        query = Booking.query
+        if status_filter != 'All':
+            query = query.filter_by(booking_status=status_filter)
+        
+        bookings = query.order_by(Booking.booking_date.desc()).all()
+        
+        return render_template('admin/all_bookings.html', bookings=bookings, status_filter=status_filter)
+
     # ============ STAFF DASHBOARD ============
     @app.route('/staff/dashboard')
     @login_required
@@ -303,6 +322,7 @@ def register_routes(app):
         
         trek = Trek.query.get_or_404(trek_id)
         
+        # Security check: only assigned staff can manage this trek
         if trek.assigned_staff_id != current_user.id:
             flash('You are not assigned to this trek', 'error')
             return redirect(url_for('staff_dashboard'))
@@ -322,12 +342,21 @@ def register_routes(app):
             elif action == 'update_status':
                 new_status = request.form.get('status')
                 trek.status = new_status
+                
+                # If trek is marked Completed, mark all its active bookings as Completed too
+                if new_status == 'Completed':
+                    bookings = Booking.query.filter_by(trek_id=trek.id, booking_status='Booked').all()
+                    for booking in bookings:
+                        booking.booking_status = 'Completed'
+                
                 db.session.commit()
                 flash(f'Trek status updated to {new_status}!', 'success')
             
             return redirect(url_for('manage_trek', trek_id=trek.id))
         
+        # Get all bookings/participants for this trek
         bookings = Booking.query.filter_by(trek_id=trek.id).all()
+        
         return render_template('staff/manage_trek.html', trek=trek, bookings=bookings)
 
     # ============ USER DASHBOARD ============

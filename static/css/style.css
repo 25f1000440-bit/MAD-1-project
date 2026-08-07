@@ -944,3 +944,8 @@ body {
     color: #004085;
     border: 1px solid #b8daff;
 }
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}

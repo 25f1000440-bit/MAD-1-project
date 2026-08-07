@@ -80,6 +80,30 @@
                     <button type="submit" class="btn btn-primary">Update</button>
                 </form>
             </div>
+
+            <div class="control-card">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions">
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="Ongoing">
+                        {% if trek.status == 'Ongoing' or trek.status == 'Completed' %}
+                            <button type="submit" class="btn btn-sm btn-warning" disabled>Mark as Started</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-sm btn-warning">Mark as Started</button>
+                        {% endif %}
+                    </form>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="Completed">
+                        {% if trek.status == 'Completed' %}
+                            <button type="submit" class="btn btn-sm btn-success" disabled>Mark as Completed</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark this trek as completed? This will also mark all bookings as completed.')">Mark as Completed</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
         </div>
 
         <!-- PARTICIPANTS LIST -->

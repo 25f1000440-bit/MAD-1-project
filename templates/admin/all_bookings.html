@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Admin Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_treks') }}">Manage Treks</a></li>
+            <li><a href="{{ url_for('manage_staff') }}">Manage Staff</a></li>
+            <li><a href="{{ url_for('all_bookings') }}" class="active">All Bookings</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <div class="section-header-with-filters">
+            <h1>All Bookings & Trekking History</h1>
+            <form method="GET" class="filter-form">
+                <select name="status" onchange="this.form.submit()">
+                    <option value="All" {% if status_filter == 'All' %}selected{% endif %}>All Statuses</option>
+                    <option value="Booked" {% if status_filter == 'Booked' %}selected{% endif %}>Booked</option>
+                    <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </form>
+        </div>
+
+        {% if bookings %}
+            <div class="recent-bookings-section">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>User</th>
+                            <th>Trek</th>
+                            <th>Booking Date</th>
+                            <th>Trek Dates</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+                            <td>{{ booking.user.name }}</td>
+                            <td>{{ booking.trek.trek_name }}</td>
+                            <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ booking.trek.start_date.strftime('%d %b') }} - {{ booking.trek.end_date.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <span class="status-badge status-{{ booking.booking_status.lower() }}">
+                                    {{ booking.booking_status }}
+                                </span>
+                            </td>
+                            <td>{{ booking.payment_status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No bookings found for this filter.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
