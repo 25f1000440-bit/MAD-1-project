@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Trekker Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('my_bookings') }}" class="active">My Bookings</a></li>
+            <li><a href="{{ url_for('trekking_history') }}">History</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <h1>My Bookings</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if bookings %}
+            <div class="recent-bookings-section">
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Booking Date</th>
+                            <th>Trek Dates</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.trek.trek_name }}</td>
+                            <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ booking.trek.start_date.strftime('%d %b') }} - {{ booking.trek.end_date.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <span class="status-badge status-{{ booking.booking_status.lower() }}">
+                                    {{ booking.booking_status }}
+                                </span>
+                            </td>
+                            <td>{{ booking.payment_status }}</td>
+                            <td>
+                                <a href="{{ url_for('trek_details', trek_id=booking.trek.id) }}" class="btn btn-sm btn-secondary">View</a>
+                                {% if booking.booking_status == 'Booked' %}
+                                    <form method="POST" action="{{ url_for('cancel_booking', booking_id=booking.id) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this booking?')">Cancel</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>You haven't booked any treks yet. <a href="{{ url_for('user_dashboard') }}">Browse available treks</a></p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

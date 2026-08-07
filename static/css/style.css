@@ -915,3 +915,32 @@ body {
     background-color: #cce5ff;
     color: #004085;
 }
+/* SECTION HEADER WITH FILTERS */
+.section-header-with-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header-with-filters h2 {
+    margin: 0;
+}
+
+.filter-form {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-form select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.alert-info {
+    background-color: #cce5ff;
+    color: #004085;
+    border: 1px solid #b8daff;
+}

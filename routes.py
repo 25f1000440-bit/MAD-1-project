@@ -337,4 +337,137 @@ def register_routes(app):
         if current_user.role != 'trekker':
             flash('Access denied', 'error')
             return redirect(url_for('home'))
-        return render_template('user/dashboard.html')
+        
+        difficulty_filter = request.args.get('difficulty', 'All')
+        location_filter = request.args.get('location', 'All')
+        
+        query = Trek.query.filter_by(status='Open')
+        
+        if difficulty_filter != 'All':
+            query = query.filter_by(difficulty=difficulty_filter)
+        if location_filter != 'All':
+            query = query.filter_by(location=location_filter)
+        
+        available_treks = query.all()
+        
+        all_locations = db.session.query(Trek.location).distinct().all()
+        all_locations = [loc[0] for loc in all_locations]
+        
+        my_bookings = Booking.query.filter_by(user_id=current_user.id).order_by(Booking.booking_date.desc()).limit(5).all()
+        
+        return render_template('user/dashboard.html',
+                               available_treks=available_treks,
+                               my_bookings=my_bookings,
+                               all_locations=all_locations,
+                               difficulty_filter=difficulty_filter,
+                               location_filter=location_filter)
+
+    # ============ USER - TREK DETAILS & BOOKING ============
+    @app.route('/user/trek/<int:trek_id>', methods=['GET', 'POST'])
+    @login_required
+    def trek_details(trek_id):
+        if current_user.role != 'trekker':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        trek = Trek.query.get_or_404(trek_id)
+        
+        # Check if user already booked this trek
+        existing_booking = Booking.query.filter_by(
+            user_id=current_user.id,
+            trek_id=trek.id
+        ).filter(Booking.booking_status != 'Cancelled').first()
+        
+        if request.method == 'POST':
+            # Prevent duplicate bookings
+            if existing_booking:
+                flash('You have already booked this trek!', 'warning')
+                return redirect(url_for('trek_details', trek_id=trek.id))
+            
+            # Prevent booking when trek is closed
+            if trek.status != 'Open':
+                flash('This trek is not open for booking.', 'error')
+                return redirect(url_for('trek_details', trek_id=trek.id))
+            
+            # Prevent booking when slots are full
+            if trek.available_slots <= 0:
+                flash('No slots available for this trek.', 'error')
+                return redirect(url_for('trek_details', trek_id=trek.id))
+            
+            # Create the booking
+            new_booking = Booking(
+                user_id=current_user.id,
+                trek_id=trek.id,
+                booking_status='Booked',
+                payment_status='Pending'
+            )
+            db.session.add(new_booking)
+            
+            # Reduce available slots by 1
+            trek.available_slots -= 1
+            
+            db.session.commit()
+            
+            flash('Trek booked successfully!', 'success')
+            return redirect(url_for('my_bookings'))
+        
+        return render_template('user/trek_details.html', trek=trek, existing_booking=existing_booking)
+
+    # ============ USER - MY BOOKINGS ============
+    @app.route('/user/my-bookings')
+    @login_required
+    def my_bookings():
+        if current_user.role != 'trekker':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        # Get all bookings for this user (excluding cancelled ones by default view)
+        bookings = Booking.query.filter_by(user_id=current_user.id).order_by(Booking.booking_date.desc()).all()
+        
+        return render_template('user/my_bookings.html', bookings=bookings)
+
+    # ============ USER - CANCEL BOOKING ============
+    @app.route('/user/cancel-booking/<int:booking_id>', methods=['POST'])
+    @login_required
+    def cancel_booking(booking_id):
+        if current_user.role != 'trekker':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        booking = Booking.query.get_or_404(booking_id)
+        
+        # Security check: only the booking owner can cancel it
+        if booking.user_id != current_user.id:
+            flash('Access denied', 'error')
+            return redirect(url_for('my_bookings'))
+        
+        if booking.booking_status == 'Booked':
+            booking.booking_status = 'Cancelled'
+            
+            # Return the slot back to the trek
+            trek = Trek.query.get(booking.trek_id)
+            if trek:
+                trek.available_slots += 1
+            
+            db.session.commit()
+            flash('Booking cancelled successfully.', 'success')
+        else:
+            flash('This booking cannot be cancelled.', 'warning')
+        
+        return redirect(url_for('my_bookings'))
+
+    # ============ USER - TREKKING HISTORY ============
+    @app.route('/user/history')
+    @login_required
+    def trekking_history():
+        if current_user.role != 'trekker':
+            flash('Access denied', 'error')
+            return redirect(url_for('home'))
+        
+        # Get only completed treks for this user
+        completed_bookings = Booking.query.filter_by(
+            user_id=current_user.id,
+            booking_status='Completed'
+        ).order_by(Booking.booking_date.desc()).all()
+        
+        return render_template('user/history.html', completed_bookings=completed_bookings)

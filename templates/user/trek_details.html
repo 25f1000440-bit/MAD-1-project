@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Trekker Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+            <li><a href="{{ url_for('trekking_history') }}">History</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <div class="page-header">
+            <h1>{{ trek.trek_name }}</h1>
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">← Back to Treks</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- TREK INFO CARD -->
+        <div class="trek-info-card">
+            <div class="trek-info-grid">
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ trek.location }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Difficulty:</span>
+                    <span class="difficulty-badge difficulty-{{ trek.difficulty.lower() }}">{{ trek.difficulty }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Duration:</span>
+                    <span class="info-value">{{ trek.duration }} Days</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Start Date:</span>
+                    <span class="info-value">{{ trek.start_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">End Date:</span>
+                    <span class="info-value">{{ trek.end_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Available Slots:</span>
+                    <span class="info-value">{{ trek.available_slots }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
+                    <span class="status-badge status-{{ trek.status.lower() }}">{{ trek.status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOOKING SECTION -->
+        <div class="form-container">
+            {% if existing_booking %}
+                <div class="alert alert-info">
+                    You have already booked this trek. 
+                    Status: <strong>{{ existing_booking.booking_status }}</strong>
+                </div>
+                <a href="{{ url_for('my_bookings') }}" class="btn btn-secondary">View My Bookings</a>
+            
+            {% elif trek.status != 'Open' %}
+                <div class="alert alert-error">
+                    This trek is currently <strong>{{ trek.status }}</strong> and not accepting bookings.
+                </div>
+            
+            {% elif trek.available_slots <= 0 %}
+                <div class="alert alert-error">
+                    Sorry, this trek is fully booked. No slots available.
+                </div>
+            
+            {% else %}
+                <form method="POST">
+                    <p>Ready to book this trek? Click below to confirm your spot.</p>
+                    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

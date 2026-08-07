@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="admin-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="admin-sidebar">
+        <h3>Trekker Panel</h3>
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('user_dashboard') }}" class="active">Dashboard</a></li>
+            <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+            <li><a href="{{ url_for('trekking_history') }}">History</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-content">
+        <h1>Welcome, {{ current_user.name }}!</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- AVAILABLE TREKS SECTION -->
+        <div class="recent-bookings-section">
+            <div class="section-header-with-filters">
+                <h2>Available Treks</h2>
+                <form method="GET" class="filter-form">
+                    <select name="difficulty" onchange="this.form.submit()">
+                        <option value="All" {% if difficulty_filter == 'All' %}selected{% endif %}>All Difficulty</option>
+                        <option value="Easy" {% if difficulty_filter == 'Easy' %}selected{% endif %}>Easy</option>
+                        <option value="Moderate" {% if difficulty_filter == 'Moderate' %}selected{% endif %}>Moderate</option>
+                        <option value="Hard" {% if difficulty_filter == 'Hard' %}selected{% endif %}>Hard</option>
+                    </select>
+
+                    <select name="location" onchange="this.form.submit()">
+                        <option value="All" {% if location_filter == 'All' %}selected{% endif %}>All Locations</option>
+                        {% for loc in all_locations %}
+                            <option value="{{ loc }}" {% if location_filter == loc %}selected{% endif %}>{{ loc }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            {% if available_treks %}
+                <table class="treks-table">
+                    <thead>
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Location</th>
+                            <th>Difficulty</th>
+                            <th>Duration</th>
+                            <th>Available Slots</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trek in available_treks %}
+                        <tr>
+                            <td>{{ trek.trek_name }}</td>
+                            <td>{{ trek.location }}</td>
+                            <td>
+                                <span class="difficulty-badge difficulty-{{ trek.difficulty.lower() }}">
+                                    {{ trek.difficulty }}
+                                </span>
+                            </td>
+                            <td>{{ trek.duration }} Days</td>
+                            <td>{{ trek.available_slots }}</td>
+                            <td>
+                                <a href="{{ url_for('trek_details', trek_id=trek.id) }}" class="btn btn-sm btn-primary">
+                                    {% if trek.available_slots > 0 %}Book Now{% else %}View Details{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted">No treks available matching your filters.</p>
+            {% endif %}
+        </div>
+
+        <!-- MY RECENT BOOKINGS SECTION -->
+        <div class="recent-bookings-section" style="margin-top: 30px;">
+            <h2>My Recent Bookings</h2>
+            {% if my_bookings %}
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Trek Name</th>
+                            <th>Booking Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in my_bookings %}
+                        <tr>
+                            <td>{{ booking.trek.trek_name }}</td>
+                            <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <span class="status-badge status-{{ booking.booking_status.lower() }}">
+                                    {{ booking.booking_status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('trek_details', trek_id=booking.trek.id) }}" class="btn btn-sm btn-secondary">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted">You haven't booked any treks yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
